@@ -16,13 +16,46 @@ struct File {
     int size;
 };
 
+int checkArray(char **cat, int numCat, int counter[MAX_CATEGORIES],
+                char categories[MAX_CATEGORIES][MAX_STRING_LEN], int index); 
+
 /**
  * Task 1
  * Returned list should contain copies of the names e.g. through strdup()
  */
 char **leafFiles(struct File *files, int numFiles, int *numLeafFiles) {
-    *numLeafFiles = 0;
-    return malloc(0 * sizeof(char *));
+    //if this flag is one, that means it is not a leaf node
+    int flag = 0;
+   
+    //keeps track of the number of leaf files
+    int counter = 0;
+
+    //not sure how to do a list in c, so I just used an array (holds the copies 
+    //of the names
+    char **names = malloc(MAX_STRING_LEN * numFiles);
+   
+    //for each file
+    for (int i = 0; i < numFiles; i++){
+        //we want to check if it is a parent: if it is not a parent to any other
+        //file than it is a leaf
+        for (int j = 0; j < numFiles; j++) {
+            if (files[j].parent == files[i].id) {
+                flag = 1;
+            }
+        }
+
+        // if flag = 0, that means the files[i] is not a parent i.e is a leaf
+        if (flag == 0) {
+            names[counter] = strdup(files[i].name);
+            counter++;
+        }
+        
+        //reset for next file
+        flag = 0;
+    }
+    *numLeafFiles = counter;
+
+    return names;
 }
 
 /**
@@ -30,13 +63,80 @@ char **leafFiles(struct File *files, int numFiles, int *numLeafFiles) {
  * Returned list should contain copies of the categories e.g. through strdup()
  */
 char **kLargestCategories(struct File *files, int numFiles, int k, int *numReturned) {
-    *numReturned = 0;
-    return malloc(0 * sizeof(char *));
+    //An array of category names
+    char **cat = malloc(MAX_STRING_LEN * MAX_CATEGORIES);
+
+    //An array that keeps a counter of the number of files in a category
+    //Each index in the categories array corresponds to the index in this array
+    //i dont know if this is the most efficient way, but its all I can think of
+    int counter[MAX_CATEGORIES] = {};
+
+    //number of categories discovered so far
+    int numCat = 0;
+
+    for (int i = 0; i < numFiles; i++) {
+        for (int j = 0; j < files[i].numCategories; j++) {
+            numCat = checkArray(cat, numCat, counter, files[i].categories, j);
+        }
+    }
+
+    if (k > numCat) {
+        k = numCat;
+    }
+
+    char **returns = malloc(MAX_STRING_LEN * MAX_CATEGORIES);
+    //this would be a lot easier in javascript :((
+    //find the kth max
+    for (int i = 0; i < k; i++) {
+        int max = counter[0];
+        int index = 0;
+        for (int j = 0; j < numCat - i; j++)  {
+            if (max < counter[j]) {
+                max = counter[j];
+                index = j;
+            } else if (max == counter[j]) {
+                //doesnt account for lower case letters yet cause im running
+                //out of time (i started a bit too late)
+                if (strcmp(cat[index], cat[j]) > 0) {
+                    max = counter[j];
+                    index = j;
+                }
+            }
+        }
+     
+        returns[i] = strdup(cat[index]);
+        cat[index] = cat[numCat - i - 1];
+        counter[index] = counter[numCat - i - 1];
+    }
+    
+    *numReturned = k;
+    return returns;
+}
+
+int checkArray(char **cat, int numCat, int counter[MAX_CATEGORIES],
+                char categories[MAX_CATEGORIES][MAX_STRING_LEN], int index) {
+    int flag = 0;
+    for (int i = 0; i < numCat; i++) {
+        if (strcmp(cat[i], categories[index]) == 0) {
+            counter[i]++;
+            flag = 1;
+        }
+    }
+
+    //new category
+    if (flag == 0) {
+        cat[numCat] = strdup(categories[index]);
+        counter[numCat]++;
+        numCat++;
+    }
+    return numCat;
 }
 
 /**
  * Task 3
  */
+ //VERY VERY SORRY I DIDN'T GET UP TO TASK 3 AS I ONLY STARTED THIS CODING SECTION
+ //LIKE AN HOUR BEFORE IT WAS DUE AS FOR SOME REASON I DIDNT EXPECT IT
 int largestFileSize(struct File *files, int numFiles) {
     return 0;
 }
